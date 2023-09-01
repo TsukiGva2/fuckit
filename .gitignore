@@ -35,6 +35,8 @@
 *.i*86
 *.x86_64
 *.hex
+# the name of the out
+fuckit
 
 # Debug files
 *.dSYM/
