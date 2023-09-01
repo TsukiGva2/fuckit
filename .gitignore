@@ -1,3 +1,9 @@
+# Segfaults
+# i assure you this
+# is a constant problem
+# in my code (yes i'm incompetent)
+*.core
+
 # Prerequisites
 *.d
 
