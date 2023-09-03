@@ -1,26 +1,38 @@
 #include "LCD.h"
-#include "debug.h"
 #include "fuckit.h"
 #include "LCD_Font.h"
 
 /* Output */
-void LCD_Out_Text(LCD* lcd, char* s) {
+// TODO: error (later)
+HAN_Status* LCD_Out_Text(LCD* lcd, char* s) {
+	HAN_Status* h;
+
 	for (char* c = s; *c != '\0'; c++) {
 		if (*c >= 65 && *c <= 90) {
-			LCD_Displayed_Character_Set_Data(lcd, (*c)-64);
+			h = LCD_Displayed_Character_Set_Data(lcd, (*c)-64);
+
+			if (h->code != HAN_OK) {
+				return h;
+			}
 		}
 
 		LCD_State_Cursor_Advance(lcd);
 	}
+
+	return HAN_RETURN_OK;
 }
 
-void LCD_Out_Custom_Char(LCD* lcd, size_t id) {
-	LCD_Displayed_Character_Set_Data(lcd, id);
+HAN_Status* LCD_Out_Custom_Char(LCD* lcd, size_t id) {
+	HAN_Status* h;
+	h = LCD_Displayed_Character_Set_Data(lcd, id);
+
 	LCD_State_Cursor_Advance(lcd);
+
+	return h;
 }
 
 /* Char Data */
-void LCD_Char_Data_Initialize(LCD* lcd) {
+HAN_Status* LCD_Char_Data_Initialize(LCD* lcd) {
 	/*
 	 * LCD_Char_Data:
 	 *	len
@@ -37,8 +49,8 @@ void LCD_Char_Data_Initialize(LCD* lcd) {
 				lcd->char_data.cap,
 				sizeof(LCD_Char_Wrapper));
 
-	if (lcd->char_data.chars == NULL) { // TODO: error
-		return;
+	if (lcd->char_data.chars == NULL) {
+		return HAN_RETURN(HAN_ALLOC_ERR, "calloc on lcd->char_data.chars returned NULL");
 	}
 
 	LCD_Char_Wrapper* w = lcd->char_data.chars;
@@ -53,6 +65,8 @@ void LCD_Char_Data_Initialize(LCD* lcd) {
 			LCD_Char_Wrapper_Copy_Data_Offset(
 													w, LCD_FONT, i, i);
 	}
+
+	return HAN_RETURN_OK;
 }
 
 void LCD_Char_Wrapper_Copy_Data(
@@ -73,7 +87,7 @@ void LCD_Char_Wrapper_Copy_Data_Offset(
 			w[offset].size);
 }
 
-void LCD_Char_Data_Check_Bounds(LCD* lcd) {
+HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd) {
 	size_t len = lcd->char_data.len;
 
 	if (len > lcd->char_data.cap) {
@@ -85,33 +99,35 @@ void LCD_Char_Data_Check_Bounds(LCD* lcd) {
 					lcd->char_data.cap *
 					sizeof(LCD_Char_Wrapper));
 
-		if (lcd->char_data.chars == NULL) { // TODO: error
-			return;
+		if (lcd->char_data.chars == NULL) {
+			return HAN_RETURN(HAN_ALLOC_ERR, "realloc lcd->char_data.chars returned NULL");
 		}
 	}
+
+	return HAN_RETURN_OK;
 }
 
-size_t LCD_Char_Data_Create_Custom_Char(
+HAN_Status* LCD_Char_Data_Create_Custom_Char(
+		size_t* id,
 		LCD* lcd,
 		uint8_t* data) {
 	LCD_Char_Wrapper_Copy_Data(
 			lcd->char_data.chars,
 			data, lcd->char_data.len);
 
-	size_t len = lcd->char_data.len;
+	*id = lcd->char_data.len;
 
 	lcd->char_data.len++;
-	LCD_Char_Data_Check_Bounds(lcd);
-
-	return len;
+	
+	return LCD_Char_Data_Check_Bounds(lcd);
 }
 
 /* State */
-void LCD_State_Set_Cursor(LCD* lcd, int x, int y) {
+HAN_Status* LCD_State_Set_Cursor(LCD* lcd, int x, int y) {
 	if (x >= lcd->attr.cols ||
 			y >= lcd->attr.rows ||
 			x < 0 ||
-			y < 0) return; // TODO: error
+			y < 0) return HAN_RETURN(HAN_OUT_OF_BOUNDS, "invalid (x,y) value passed");
 
 	int d = x + (y * lcd->attr.cols);
 	LCD_DC* node = lcd->dc_head;
@@ -120,19 +136,24 @@ void LCD_State_Set_Cursor(LCD* lcd, int x, int y) {
 		node = node->next;
 	}
 
-	if (node != NULL) // TODO: error
-		lcd->state.cursor = node;
+	if (node == NULL) {
+		return HAN_RETURN(HAN_ALLOC_ERR, "why the hell is node == NULL");
+	}
+
+	lcd->state.cursor = node;
+	return HAN_RETURN_OK;
 }
 
 void LCD_State_Cursor_Advance(LCD* lcd) {
 	if (lcd->state.cursor->next == NULL)
-		lcd->state.cursor = lcd->dc_head; // TODO: error?
+		lcd->state.cursor = lcd->dc_head; // this is now
+																			// default behaviour
 
 	lcd->state.cursor = lcd->state.cursor->next;
 }
 
 /* Displayed_Character */
-void LCD_Displayed_Character_Update_Single(LCD_DC* dc) {
+HAN_Status* LCD_Displayed_Character_Update_Single(LCD_DC* dc) {
 	SDL_LockSurface(dc->surface_data);
 
 	uint8_t* pixels =
@@ -140,8 +161,8 @@ void LCD_Displayed_Character_Update_Single(LCD_DC* dc) {
 				dc->surface_data->h *
 				dc->surface_data->pitch);
 
-	if (pixels == NULL) { // TODO: error
-		return;
+	if (pixels == NULL) {
+		return HAN_RETURN(HAN_ALLOC_ERR, "pixels == NULL");
 	}
 
 	int x, y; x = 0; y = 0;
@@ -175,34 +196,55 @@ void LCD_Displayed_Character_Update_Single(LCD_DC* dc) {
 	free(pixels);
 
 	SDL_UnlockSurface(dc->surface_data);
+
+	return HAN_RETURN_OK;
 }
 
-void LCD_Displayed_Character_Update_All(LCD* lcd) {
+HAN_Status* LCD_Displayed_Character_Update_All(LCD* lcd) {
 	LCD_DC* node = lcd->dc_head;
+	HAN_Status* h;
+
 	for (; node->next != NULL; node = node->next) {
-		LCD_Displayed_Character_Update_Single(node);
+		h = LCD_Displayed_Character_Update_Single(node);
+
+		if (h->code != HAN_OK) {
+			return h;
+		}
 	}
+
+	return HAN_RETURN_OK;
 }
 
-void LCD_Displayed_Character_Set_Data(
+HAN_Status* LCD_Displayed_Character_Set_Data(
 															LCD* lcd,
 															size_t id) {
 	if (id >= lcd->char_data.len)
-		return; // TODO: error
+		return HAN_RETURN(HAN_OUT_OF_BOUNDS, "id is greater than list length");
 
 	lcd->state.cursor->char_wrapped =
 		&lcd->char_data.chars[id];
 
-	LCD_Displayed_Character_Update_Single(
-											lcd->state.cursor);
+	return LCD_Displayed_Character_Update_Single(
+														lcd->state.cursor);
 }
 
-LCD_DC* LCD_Displayed_Character_Create_Single(
+HAN_Status* LCD_Displayed_Character_Create_Single(
+																	LCD_DC** ret,
 																	int x, int y,
 																	LCD* lcd) {
 	LCD_DC* dc =
 		(LCD_DC*)malloc(
 				sizeof(LCD_DC));
+
+	*ret = dc;
+
+	if (dc == NULL) {
+		return HAN_RETURN(HAN_ALLOC_ERR, "couldnt allocate single Displayed_Character");
+	}
+	
+	dc->surface_data = NULL;
+	dc->next = NULL;
+	dc->char_wrapped = lcd->char_data.chars;
 	
 	// XXX: but it works!
 	dc->rect =
@@ -218,24 +260,27 @@ LCD_DC* LCD_Displayed_Character_Create_Single(
 												LCD_CHAR_H,
 												32, 0, 0, 0, 0);
 
-	if (sfc == NULL) { // TODO: error
-		return NULL;
+	if (sfc == NULL) {
+		return HAN_RETURN(HAN_CREATE_SURFACE_ERR, "couldnt create RGBSurface 'sfc'");
 	}
 
 	dc->surface_data = sfc;
 	dc->next = NULL;
 
-	dc->char_wrapped = lcd->char_data.chars;
-
-	return dc;
+	return HAN_RETURN_OK;
 }
 
-void LCD_Displayed_Character_Create_All(LCD* lcd) {
+HAN_Status* LCD_Displayed_Character_Create_All(LCD* lcd) {
 	int row = 0;
 	int col = 0;
 
-	lcd->dc_head =
-		LCD_Displayed_Character_Create_Single(col, row, lcd);
+	HAN_Status* h;
+	h = LCD_Displayed_Character_Create_Single(
+			&lcd->dc_head, col, row, lcd);
+
+	if (h->code != HAN_OK) {
+		return h;
+	}
 
 	col = 0;
 
@@ -248,16 +293,19 @@ void LCD_Displayed_Character_Create_All(LCD* lcd) {
 			row++;
 		}
 
-		node->next =
-			LCD_Displayed_Character_Create_Single(
-					col, row, lcd);	
+		h = LCD_Displayed_Character_Create_Single(
+					&node->next, col, row, lcd);
 
-		// TODO: error
-		if (node != NULL)
-			node = node->next;
+		if (h->code != HAN_OK) {
+			return h;
+		}
+
+		node = node->next;
 	}
 
 	lcd->state.cursor = lcd->dc_head;
+
+	return HAN_RETURN_OK;
 }
 
 void LCD_Displayed_Character_Draw_Single(
@@ -277,6 +325,36 @@ void LCD_Displayed_Character_Draw_All(
 
 /* Misc */
 void LCD_Free(LCD* lcd) {
+	LCD_Free_Char_Data(&lcd->char_data);
+	LCD_Free_Displayed_Characters(lcd->dc_head);
+	lcd->dc_head = NULL;
 
+	// no need to free lcd,
+	// it's in the stack
+	// dumbass.
+	// free(lcd)
+}
+
+void LCD_Free_Char_Data(LCD_Char_Data* cd) {
+	if (cd->chars != NULL)
+		free(cd->chars);
+
+	cd->chars = NULL;
+}
+
+void LCD_Free_Displayed_Characters(LCD_DC* head) {
+	if (head == NULL) return;
+
+	LCD_DC* node = head;
+	LCD_DC* next = head->next;
+
+	for (; next != NULL; node = next) {
+		next = node->next;
+
+		if (node->surface_data != NULL)
+			SDL_FreeSurface(node->surface_data);
+
+		free(node);
+	}
 }
 

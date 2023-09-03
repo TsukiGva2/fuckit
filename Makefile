@@ -7,7 +7,8 @@ DEBUG=-O0 -g -Wall
 all:
 	gcc LCD.c -c -o LCD.o $(CFLAGS) $(DEBUG)
 	gcc debug.c -c -o debug.o $(DEBUG)
-	gcc fuckit.c debug.o LCD.o -o fuckit $(CFLAGS) $(LIBS) $(DEBUG)
+	gcc han.c -c -o han.o $(DEBUG)
+	gcc fuckit.c debug.o LCD.o han.o -o fuckit $(CFLAGS) $(LIBS) $(DEBUG)
 
 release:
 	gcc fuckit.c -o fuckit $(CFLAGS) $(LIBS) $(RELEASE)

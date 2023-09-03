@@ -27,16 +27,24 @@ int load_lcd_bmp(SDL_Surface** lcd_bmp) {
 }
 
 int main(void) {
+	int s = 1;
+
+	HAN_Status handler;
+	HAN_Create(&handler);
+
 	LCD lcd;
+
+	lcd.handler = &handler;
 
 	lcd.attr.rows = 2;
 	lcd.attr.cols = 16;
 	lcd.attr.size = lcd.attr.rows*lcd.attr.cols;
 	lcd.attr.gap = 2;
 
-	// TODO: error handling
-	LCD_Char_Data_Initialize(&lcd);
-
+	CHECK(
+		LCD_Char_Data_Initialize(&lcd),
+		die
+	);
 
 	SDL_Window*  win     = NULL;
 	SDL_Surface* scr     = NULL;
@@ -59,8 +67,10 @@ int main(void) {
 	}
 
 	// XXX: get rid of these goto's someday
+	// XXX: i ended up adding more goto's
+	// kill me
 
-	int s = load_lcd_bmp(&lcd_bmp);
+	s = load_lcd_bmp(&lcd_bmp);
 	if (s != 0) goto cleanup; // 1
 
 	scr = SDL_GetWindowSurface(win);
@@ -70,8 +80,10 @@ int main(void) {
 		goto cleanup;
 	}
 	
-	// TODO: error
-	LCD_Displayed_Character_Create_All(&lcd);
+	CHECK (
+		LCD_Displayed_Character_Create_All(&lcd),
+		cleanup
+	);
 
 	int run = 1;
 	uint32_t ft;
@@ -83,25 +95,40 @@ int main(void) {
 	// XXX
 	LCD_Char custom = {
 		0b00000,
+		0b00000,
+		0b00100,
+		0b00100,
+		0b00100,
 		0b11111,
-		0b11011,
-		0b10101,
-		0b10101,
-		0b10101,
-		0b11011,
-		0b11111
+		0b11111,
+		0b00000
 	};
 
-	size_t id =
-		LCD_Char_Data_Create_Custom_Char(&lcd, custom);
+	size_t id = 0;
+	CHECK (
+			LCD_Char_Data_Create_Custom_Char(&id, &lcd, custom),
+			cleanup
+	);
 
-	LCD_Out_Custom_Char(&lcd, id);
+	CHECK (
+		LCD_Out_Custom_Char(&lcd, id),
+		cleanup
+	);
 
-	LCD_Displayed_Character_Update_All(&lcd);
+	CHECK (
+		LCD_Displayed_Character_Update_All(&lcd),
+		cleanup
+	);
 
-	LCD_State_Set_Cursor(&lcd, 2, 1);
+	CHECK (
+		LCD_State_Set_Cursor(&lcd, 1, 0),
+		cleanup
+	);
 
-	LCD_Out_Text(&lcd, "ABCDEFGHIJ");
+	CHECK (
+		LCD_Out_Text(&lcd, "ABCDEFGHIJKMNOPQRSTUVWXYZ"),
+		cleanup
+	);
 
 	// up till here
 
@@ -142,6 +169,7 @@ cleanup:
 
 	SDL_Quit();
 
+die:
 	return s;
 }
 
