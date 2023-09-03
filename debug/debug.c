@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "debug.h"
+
+#include "../debug/debug.h"
 
 void my_log(HAN_Status* s, const char* file, int line, const char* func) {
 	printf("in file: %s:%i, function: %s\n"

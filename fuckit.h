@@ -15,7 +15,7 @@
 #define LCD_STARTPOS_X 76
 #define LCD_STARTPOS_Y 100
 
-#include "debug.h"
+#include "debug/debug.h"
 #define malloc(x) my_malloc(x, __FILE__, __LINE__, __FUNCTION__)
 #define free(x) my_free(x, __FILE__, __LINE__, __FUNCTION__)
 #define LOG(s) my_log(s, __FILE__, __LINE__, __FUNCTION__)

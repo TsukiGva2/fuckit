@@ -2,7 +2,7 @@
 #define __LCD_H__
 
 #include <SDL2/SDL.h>
-#include "debug.h"
+#include "../debug/debug.h"
 
 #define LCD_CHAR_W 5
 #define LCD_CHAR_H 8
@@ -59,6 +59,7 @@ typedef struct LCD {
 // FUNCTIONS:
 
 // Output:
+HAN_Status* LCD_Out_Clear(LCD* lcd);
 HAN_Status* LCD_Out_Text(LCD* lcd, char* s);
 HAN_Status* LCD_Out_Custom_Char(LCD* lcd, size_t id);
 
@@ -71,14 +72,17 @@ HAN_Status* LCD_Char_Data_Create_Custom_Char(
 
 HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd);
 
-void        LCD_Char_Wrapper_Copy_Data(
-												LCD_Char_Wrapper* w,
-												uint8_t* data, size_t index);
+HAN_Status* LCD_Char_Wrapper_Copy_Data(
+												LCD_Char_Data* cd,
+												uint8_t* data,
+												size_t index);
 
-void        LCD_Char_Wrapper_Copy_Data_Offset(
-												LCD_Char_Wrapper* w,
-												uint8_t* data, size_t index,
-												size_t offset);
+HAN_Status* LCD_Char_Wrapper_Copy_Data_From_Array_Offset(
+												LCD_Char_Data* cd,
+												const uint8_t data[static sizeof(LCD_Char)],
+												size_t index,
+												size_t offset,
+												size_t size);
 
 // State functions:
 HAN_Status* LCD_State_Set_Cursor(LCD* lcd, int x, int y);
