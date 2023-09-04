@@ -50,6 +50,10 @@ fuckit
 *.idb
 *.pdb
 
+# vim
+*.swp
+Session.vim
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
