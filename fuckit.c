@@ -18,14 +18,9 @@
 #include "game/game.h"
 
 int main(void) {
-	int s = 1;
-
 	HAN_Status handler;
 	GAME game;
 	LCD lcd;
-	
-	SDL_Surface* lcd_bmp = NULL;
-	SDL_Rect     lcd_size = 
 
 	DEFER (
 		GAME_Create(&game, &lcd, &handler), // if making a game was
@@ -89,12 +84,7 @@ int main(void) {
 	
 cleanup:
 	GAME_Free(&game);
-	//LCD_Free(&lcd);
-
 	//SDL_DestroyWindow(win);
 	//SDL_Quit();
-
-die:
-	return s;
 }
 

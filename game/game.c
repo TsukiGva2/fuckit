@@ -1,4 +1,5 @@
 #include "game.h"
+#include "game_internal.h"
 
 static GAME* _GAME_Get_Self(GAME* game) {
 	static GAME* self = NULL;
@@ -58,7 +59,7 @@ HAN_Status* GAME_Create(
 	lcd->char_data.chars = NULL;
 	lcd->dc_head         = NULL;
 
-	lcd->handler = handler;
+	game->lcd = lcd;
 
 	/* sdl */
 	game->win = NULL;
@@ -70,7 +71,7 @@ HAN_Status* GAME_Create(
 	game->fps.ft     =  0;
 
 	/* bg */
-	game->bg.rect = {0, 0, WIN_W, WIN_H};
+	game->bg.r    = (SDL_Rect){0, 0, WIN_W, WIN_H};
 	game->bg.img  = NULL;
 
 	/* game_objects */
@@ -104,7 +105,7 @@ void _GAME_Check_Update_Condition(void) {
 	GAME* self = GAME_Get_Self();
 
 	if (!self->update) {
-		
+		if (self->fps.frames % 30 == 0) self->update = true;
 	}
 }
 
@@ -113,9 +114,12 @@ HAN_Status* GAME_Loop_Update(void) {
 
 	if (self->update) {
 		FAIL (LCD_Out_Clear(self->lcd));
-		FAIL (GAME_Object_Update_All(self->objs));
+		//FAIL (GAME_Object_Update_All(self->objs));
 
-		self->update = false;
+		//test
+		FAIL (LCD_State_Set_Cursor(
+					self->lcd, (self->fps.frames/30)%15, 0));
+		FAIL (LCD_Out_Text(self->lcd, "BY TSUKIGVA"));
 	}
 
 	GAME_Loop_Process_Input();
@@ -129,7 +133,7 @@ HAN_Status* GAME_Loop_Draw(void) {
 	SDL_BlitScaled(
 			self->bg.img, NULL, self->scr, &self->bg.r);
 	
-	LCD_Displayed_Character_Draw_All(&lcd, scr);
+	LCD_Displayed_Character_Draw_All(self->lcd, self->scr);
 
 	return HAN_RETURN_OK;
 }
@@ -146,6 +150,8 @@ void GAME_Loop_Finish(void) {
 		SDL_Delay(fps->min_ft - fps->curr);
 
 	self->fps.frames++;
+	
+	self->update = false;
 }
 
 /* input */
@@ -166,6 +172,24 @@ static void GAME_Loop_Process_Input(void) {
 
 /* misc */
 void GAME_Free(GAME* game) {
+	/* just making sure */
+	game->running = false;
+	game->update  = false;
+
+	/* sdl/bg */
+	if (game->bg.img != NULL)
+		SDL_FreeSurface(game->bg.img);
+	if (game->win != NULL)
+		SDL_DestroyWindow(game->win);
+
+	game->bg.img = NULL;
+	game->win    = NULL;
+
+	/* lcd */
+	LCD_Free(game->lcd);
+
+	/* finishing */
+	SDL_Quit();
 }
 
 HAN_Status* GAME_Load_BG(void) {

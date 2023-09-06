@@ -2,7 +2,7 @@
 #define __FUCKIT_GAME_H__
 
 #include <SDL2/SDL.h>
-#include <stdtypes.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #include "../fuckit.h"
@@ -29,7 +29,6 @@ typedef struct GAME {
 	SDL_Surface* scr;
 	
 	LCD* lcd;
-	HAN_Status* handler;
 
 	FPS fps;
 
@@ -46,19 +45,11 @@ HAN_Status* GAME_Create(
 		LCD* lcd,
 		HAN_Status* handler);
 
-/* internal */
-static GAME* _GAME_Get_Self(GAME* game);
-static GAME* GAME_Get_Self (void);
-
-static HAN_Status* GAME_Create_SDL_Window_And_Screen(void);
-
 /* logic */
-void				GAME_Begin_Loop(void);
+void				GAME_Loop_Begin(void);
 
-static void _GAME_Check_Update_Condition(void);
 
 HAN_Status* GAME_Loop_Update(void);
-static void GAME_Loop_Process_Input(void);
 HAN_Status*	GAME_Loop_Draw(void);
 
 void				GAME_Loop_Finish(void);

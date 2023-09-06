@@ -52,8 +52,6 @@ typedef struct LCD {
 	LCD_DC* dc_head;
 	LCD_Attr attr;
 	LCD_State state;
-
-	HAN_Status* handler;
 } LCD;
 
 // FUNCTIONS:

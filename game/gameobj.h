@@ -1,9 +1,7 @@
 #ifndef __GAME_OBJECT_H__
 #define __GAME_OBJECT_H__
 
-#include <SDL2/SDL.h>
-#include <stdtypes.h>
-
+#include "game.h"
 #include "../fuckit.h"
 #include "../LCD/LCD.h"
 #include "../handler/han.h"

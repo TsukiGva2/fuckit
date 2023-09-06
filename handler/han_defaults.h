@@ -1,5 +1,8 @@
 #ifndef __HAN_DEFAULTS__
 #define __HAN_DEFAULTS__
+
+#include "../fuckit_config.h"
+
 const char* HAN_DEFAULT_MESSAGES[] = {
 	"ALL GOOD",
 	"Couldn't allocate enough memory!",
