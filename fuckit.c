@@ -31,11 +31,11 @@ int main(void) {
 	LCD_Char custom = {
 		0b00000,
 		0b00000,
-		0b00100,
-		0b00100,
-		0b00100,
-		0b11110,
+		0b10010,
 		0b11111,
+		0b11111,
+		0b10010,
+		0b00000,
 		0b00000
 	};
 
@@ -44,6 +44,13 @@ int main(void) {
 			LCD_Char_Data_Create_Custom_Char(&id, &lcd, custom),
 			cleanup
 	);
+
+  GAME_OBJECT car;
+  // TODO: no checking for errors because there
+  // are currently no errors that can be thrown
+  // by this function
+  GAME_GO_Create(&car.go, 0, 0, &id, 1);
+  GAME_Add_Game_Object(&car);
 
 	while (game.running) {
 		GAME_Loop_Begin();
@@ -56,30 +63,6 @@ int main(void) {
 		GAME_Loop_Draw();
 
 		GAME_Loop_Finish();
-
-		/*
-		if (frames % 30 == 0) {
-			CHECK (
-				LCD_Out_Clear(&lcd),
-				cleanup
-			);
-
-			CHECK (
-				LCD_State_Set_Cursor(&lcd, 0, 0),
-				cleanup
-			);
-
-			CHECK (
-				LCD_Out_Text(&lcd, "BY TSUKIGVA"),
-				cleanup
-			);
-
-			CHECK (
-				LCD_Displayed_Character_Update_All(&lcd),
-				cleanup
-			);
-		}
-		*/	
 	}
 	
 cleanup:

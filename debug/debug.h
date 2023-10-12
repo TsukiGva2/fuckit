@@ -1,6 +1,7 @@
 #ifndef __DEBUG_H__GAME__
 #define __DEBUG_H__GAME__
 
+#include "stdlib.h"
 #include "../handler/han.h"
 
 void my_log(HAN_Status* s, const char* file, int line, const char* func);

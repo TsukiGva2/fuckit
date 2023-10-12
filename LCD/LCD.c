@@ -111,7 +111,7 @@ HAN_Status* LCD_Char_Wrapper_Copy_Data(
 HAN_Status* LCD_Char_Wrapper_Copy_Data_From_Array_Offset(
 											LCD_Char_Data* cd,
 											/* AT LEAST sizeof(LCD_Char) AND NOT NULL */
-											const uint8_t data[static sizeof(LCD_Char)],
+											uint8_t* data,
 											size_t index,
 											size_t offset,
 											size_t size) {
@@ -154,6 +154,26 @@ HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd) {
 	return HAN_RETURN_OK;
 }
 
+HAN_Status* LCD_Char_Data_Create_Custom_Chars(
+		size_t* id,
+		LCD* lcd,
+		uint8_t* data,
+		size_t count) {
+
+	size_t len = lcd->char_data.len;
+	size_t max = lcd->char_data.len + count;
+
+	for (len; len < max; len++, lcd->char_data.len++) {
+		FAIL (LCD_Char_Data_Check_Bounds(lcd));
+
+		FAIL (LCD_Char_Wrapper_Copy_Data_From_Array_Offset(
+									&lcd->char_data, data, len, len,
+									count * sizeof(LCD_Char)));
+	}
+
+	return HAN_RETURN_OK;
+}
+
 HAN_Status* LCD_Char_Data_Create_Custom_Char(
 		size_t* id,
 		LCD* lcd,
@@ -169,9 +189,9 @@ HAN_Status* LCD_Char_Data_Create_Custom_Char(
 
 	*id = lcd->char_data.len;
 
-	lcd->char_data.len++;
-	
-	return LCD_Char_Data_Check_Bounds(lcd);
+	lcd->char_data.len++;	
+
+	return (LCD_Char_Data_Check_Bounds(lcd));
 }
 
 /* State */

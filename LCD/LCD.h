@@ -67,6 +67,11 @@ HAN_Status* LCD_Char_Data_Create_Custom_Char(
 																		size_t* id,
 																		LCD* lcd,
 																		uint8_t* data);
+HAN_Status* LCD_Char_Data_Create_Custom_Chars(
+																		size_t* id,
+																		LCD* lcd,
+																		uint8_t* data,
+																		size_t count);
 
 HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd);
 
@@ -77,7 +82,7 @@ HAN_Status* LCD_Char_Wrapper_Copy_Data(
 
 HAN_Status* LCD_Char_Wrapper_Copy_Data_From_Array_Offset(
 												LCD_Char_Data* cd,
-												const uint8_t data[static sizeof(LCD_Char)],
+												uint8_t* data,
 												size_t index,
 												size_t offset,
 												size_t size);

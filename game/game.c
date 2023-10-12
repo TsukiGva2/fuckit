@@ -75,7 +75,8 @@ HAN_Status* GAME_Create(
 	game->bg.img  = NULL;
 
 	/* game_objects */
-	game->objs = NULL;
+	game->objs_head.prev = NULL;
+	game->objs_head.next = NULL;
 
 	/* misc */
 	game->running = true;
@@ -83,7 +84,6 @@ HAN_Status* GAME_Create(
 
 	/* functions */
 	FAIL (GAME_Create_SDL_Window_And_Screen());
-
 	FAIL (GAME_Load_BG());
 
 	FAIL (LCD_Char_Data_Initialize(lcd));
@@ -104,6 +104,7 @@ void GAME_Loop_Begin(void) {
 void _GAME_Check_Update_Condition(void) {
 	GAME* self = GAME_Get_Self();
 
+	// XXX: hardcoded stuff
 	if (!self->update) {
 		if (self->fps.frames % 30 == 0) self->update = true;
 	}
@@ -114,12 +115,17 @@ HAN_Status* GAME_Loop_Update(void) {
 
 	if (self->update) {
 		FAIL (LCD_Out_Clear(self->lcd));
-		//FAIL (GAME_Object_Update_All(self->objs));
 
-		//test
+		//FAIL (GAME_OBJECT_Update_All());
+		/* call update functions */
+
+		/*
 		FAIL (LCD_State_Set_Cursor(
 					self->lcd, (self->fps.frames/30)%15, 0));
 		FAIL (LCD_Out_Text(self->lcd, "BY TSUKIGVA"));
+		*/
+
+		FAIL (GAME_Game_Object_Update_All());
 	}
 
 	GAME_Loop_Process_Input();
@@ -200,6 +206,38 @@ HAN_Status* GAME_Load_BG(void) {
 	if (self->bg.img == NULL) {
 		return HAN_RETURN(HAN_LOAD_IMG_ERR,
 											"couldnt load bg");
+	}
+
+	return HAN_RETURN_OK;
+}
+
+/* game objects (...) */
+HAN_Status* GAME_Add_Game_Object(GAME_OBJECT* go) {
+	GAME* self = GAME_Get_Self();
+
+	GAME_OBJECT* it = &self->objs_head;
+	size_t i = 0;
+
+	for (it, i; it->next != NULL; it = it->next, i++);
+	it->next = go;
+
+	go->prev = it;
+	go->next = NULL;
+
+	go->go.id = i;
+
+	return HAN_RETURN_OK;
+}
+
+HAN_Status* GAME_Game_Object_Update_All(void) {
+	GAME* self = GAME_Get_Self();
+
+	GAME_OBJECT* it = self->objs_head.next;
+
+	for (it; it != NULL; it = it->next) {
+		FAIL (LCD_State_Set_Cursor(self->lcd, it->go.x, it->go.y));
+		FAIL (LCD_Out_Custom_Char(
+					self->lcd, it->go.sprite_ids[it->go.sprite]));
 	}
 
 	return HAN_RETURN_OK;
