@@ -17,6 +17,28 @@
 #include "LCD/LCD.h"
 #include "game/game.h"
 
+#define P 2
+
+uint8_t map[] = {1,1,1,1,1,1,
+                 1,0,0,0,0,1,
+                 1,0,P,0,0,1,
+                 1,0,0,0,0,1,
+                 1,0,0,0,0,1,
+                 1,1,1,1,1,1
+                };
+
+void player_update(GAME_GO* player) {
+  GAME* game = GAME_Get_Self();
+
+  if (++player->x >= game->lcd->attr.cols) {
+    player->x = 0;
+  }
+}
+
+void tile_update(GAME_GO* tile) {
+  // nothing
+}
+
 int main(void) {
 	HAN_Status handler;
 	GAME game;
@@ -28,29 +50,40 @@ int main(void) {
 		cleanup
 	);
 
-	LCD_Char custom = {
+	LCD_Char player_sprite = {
 		0b00000,
-		0b00000,
+		0b01100,
 		0b10010,
-		0b11111,
-		0b11111,
+		0b11110,
+		0b11110,
 		0b10010,
 		0b00000,
 		0b00000
 	};
 
-	size_t id = 0;
+  LCD_Char wall = {
+		0b00000,
+		0b01100,
+		0b10010,
+		0b11110,
+		0b11110,
+		0b10010,
+		0b00000,
+		0b00000
+  };
+
+	size_t player_sprite_id = 0;
 	DEFER (
-			LCD_Char_Data_Create_Custom_Char(&id, &lcd, custom),
+			LCD_Char_Data_Create_Custom_Char(&player_sprite_id, &lcd, player_sprite),
 			cleanup
 	);
 
-  GAME_OBJECT car;
+  GAME_OBJECT player;
   // TODO: no checking for errors because there
   // are currently no errors that can be thrown
   // by this function
-  GAME_GO_Create(&car.go, 0, 0, &id, 1);
-  GAME_Add_Game_Object(&car);
+  GAME_GO_Create(&player.go, 0, 0, &player_sprite_id, 1);
+  GAME_Add_Game_Object(&player, &player_update);
 
 	while (game.running) {
 		GAME_Loop_Begin();

@@ -11,7 +11,7 @@ static GAME* _GAME_Get_Self(GAME* game) {
 	return self;
 }
 
-static GAME* GAME_Get_Self(void) {
+GAME* GAME_Get_Self(void) {
 	return _GAME_Get_Self(NULL);
 }
 
@@ -46,6 +46,9 @@ HAN_Status* GAME_Create(
 
 	/* self */
 	_GAME_Get_Self(game); // set self
+
+  /* config */
+  game->config.update_on_input = true; // default
 	
 	/* handler */
 	HAN_Create(handler);
@@ -82,6 +85,8 @@ HAN_Status* GAME_Create(
 	game->running = true;
 	game->update  = true;
 
+  game->keys_pressed = 0;
+
 	/* functions */
 	FAIL (GAME_Create_SDL_Window_And_Screen());
 	FAIL (GAME_Load_BG());
@@ -113,11 +118,10 @@ void _GAME_Check_Update_Condition(void) {
 HAN_Status* GAME_Loop_Update(void) {
 	GAME* self = GAME_Get_Self();
 
-	if (self->update) {
+  //    updates if key was pressed
+	if (( GAME_Loop_Process_Input() && self->config.update_on_input )
+      || self->update) {
 		FAIL (LCD_Out_Clear(self->lcd));
-
-		//FAIL (GAME_OBJECT_Update_All());
-		/* call update functions */
 
 		/*
 		FAIL (LCD_State_Set_Cursor(
@@ -127,8 +131,6 @@ HAN_Status* GAME_Loop_Update(void) {
 
 		FAIL (GAME_Game_Object_Update_All());
 	}
-
-	GAME_Loop_Process_Input();
 
 	return HAN_RETURN_OK;
 }
@@ -161,19 +163,77 @@ void GAME_Loop_Finish(void) {
 }
 
 /* input */
-static void GAME_Loop_Process_Input(void) {
+enum KeyMask GAME_Get_KeyMask(SDL_Keycode k) {
+  switch (k) {
+    case SDLK_RETURN:
+      return KEY_SPACE;
+    case SDLK_h:
+      return KEY_H;
+    case SDLK_j:
+      return KEY_J;
+    case SDLK_k:
+      return KEY_K;
+    case SDLK_l:
+      return KEY_L;
+    case SDLK_q:
+      return KEY_Q;
+  }
+
+  return KEY_NONE;
+}
+
+bool GAME_Is_Key_Pressed(SDL_Keycode k) {
+  GAME* self = GAME_Get_Self();
+
+  enum KeyMask mask;
+  if ((mask = GAME_Get_KeyMask(k)) == KEY_NONE) return false;
+
+  return (self->keys_pressed & mask) != 0;
+}
+
+void GAME_Handle_Keydown(SDL_Keycode k) {
+  GAME* self = GAME_Get_Self();
+
+  enum KeyMask mask;
+  if ((mask = GAME_Get_KeyMask(k)) == KEY_NONE) return;
+
+  self->keys_pressed |= mask;
+}
+
+void GAME_Handle_Keyup(SDL_Keycode k) {
+  GAME* self = GAME_Get_Self();
+
+  enum KeyMask mask;
+  if ((mask = GAME_Get_KeyMask(k)) == KEY_NONE) return;
+
+  self->keys_pressed &= ~mask;
+}
+
+bool GAME_Loop_Process_Input(void) {
 	GAME* self = GAME_Get_Self();
+
+  bool received_input = false;
 
 	SDL_Event e;
 
 	while (SDL_PollEvent(&e)) {
-		if (e.type == SDL_QUIT)
-			self->running = false;
-		if (e.type == SDL_KEYDOWN)
-			if (e.key.keysym.sym
-					== SDLK_ESCAPE)
-				self->running = false;
+    switch (e.type) {
+      case SDL_QUIT:
+        self->running = false;
+        break;
+      case SDL_KEYDOWN:
+        if (e.key.keysym.sym == SDLK_ESCAPE) self->running = false;
+
+        received_input = !GAME_Is_Key_Pressed(e.key.keysym.sym);
+        GAME_Handle_Keydown(e.key.keysym.sym);
+        break;
+      case SDL_KEYUP:
+        GAME_Handle_Keyup(e.key.keysym.sym);
+        break;
+    }
 	}
+
+  return received_input;
 }
 
 /* misc */
@@ -212,7 +272,8 @@ HAN_Status* GAME_Load_BG(void) {
 }
 
 /* game objects (...) */
-HAN_Status* GAME_Add_Game_Object(GAME_OBJECT* go) {
+HAN_Status* GAME_Add_Game_Object(GAME_OBJECT* go,
+                                 update_fnptr_t up) {
 	GAME* self = GAME_Get_Self();
 
 	GAME_OBJECT* it = &self->objs_head;
@@ -226,6 +287,8 @@ HAN_Status* GAME_Add_Game_Object(GAME_OBJECT* go) {
 
 	go->go.id = i;
 
+  go->update = up;
+
 	return HAN_RETURN_OK;
 }
 
@@ -235,6 +298,7 @@ HAN_Status* GAME_Game_Object_Update_All(void) {
 	GAME_OBJECT* it = self->objs_head.next;
 
 	for (it; it != NULL; it = it->next) {
+    it->update(&it->go);
 		FAIL (LCD_State_Set_Cursor(self->lcd, it->go.x, it->go.y));
 		FAIL (LCD_Out_Custom_Char(
 					self->lcd, it->go.sprite_ids[it->go.sprite]));
