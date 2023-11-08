@@ -30,8 +30,10 @@ uint8_t map[] = {1,1,1,1,1,1,
 void player_update(GAME_GO* player) {
   GAME* game = GAME_Get_Self();
 
-  if (++player->x >= game->lcd->attr.cols) {
-    player->x = 0;
+  if (game->keys_pressed & KEY_L) {
+    if (++player->x >= game->lcd->attr.cols) {
+      player->x = 0;
+    }
   }
 }
 

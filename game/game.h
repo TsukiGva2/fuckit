@@ -66,7 +66,7 @@ typedef struct GAME {
   bool running;
   bool update;
 
-  uint8_t keys_pressed;
+  KeyMask keys_pressed;
 } GAME;
 
 /* Functions */
