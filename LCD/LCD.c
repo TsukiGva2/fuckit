@@ -2,6 +2,8 @@
 #include "../fuckit.h"
 #include "LCD_Font.h"
 
+#include <string.h>
+
 /* Output */
 HAN_Status* LCD_Out_Clear(LCD* lcd) {
 	HAN_Status* h;

@@ -11,81 +11,105 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
+#include <stdlib.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 
 #include "fuckit.h"
 #include "LCD/LCD.h"
 #include "game/game.h"
 
-#define P 2
+#include "resources/sprites.h"
 
-uint8_t map[] = {1,1,1,1,1,1,
-                 1,0,0,0,0,1,
-                 1,0,P,0,0,1,
-                 1,0,0,0,0,1,
-                 1,0,0,0,0,1,
-                 1,1,1,1,1,1
-                };
+#include "player/player.h"
+#include "map/map.h"
 
-void player_update(GAME_GO* player) {
-  GAME* game = GAME_Get_Self();
-
-  if (game->keys_pressed & KEY_L) {
-    if (++player->x >= game->lcd->attr.cols) {
-      player->x = 0;
-    }
-  }
-}
-
-void tile_update(GAME_GO* tile) {
-  // nothing
-}
-
-int main(void) {
+int main(int argc, char** argv) {
 	HAN_Status handler;
 	GAME game;
 	LCD lcd;
+  
+  // seeding rng
+  srand(time(NULL));
 
 	DEFER (
 		GAME_Create(&game, &lcd, &handler), // if making a game was
 																				// this easy lmao
 		cleanup
-	);
-
-	LCD_Char player_sprite = {
-		0b00000,
-		0b01100,
-		0b10010,
-		0b11110,
-		0b11110,
-		0b10010,
-		0b00000,
-		0b00000
-	};
-
-  LCD_Char wall = {
-		0b00000,
-		0b01100,
-		0b10010,
-		0b11110,
-		0b11110,
-		0b10010,
-		0b00000,
-		0b00000
-  };
+	);	
 
 	size_t player_sprite_id = 0;
+  size_t water_id = 0;
+  size_t grass_id = 0;
+  size_t tree_id  = 0;
+
 	DEFER (
 			LCD_Char_Data_Create_Custom_Char(&player_sprite_id, &lcd, player_sprite),
 			cleanup
 	);
 
+	DEFER (
+			LCD_Char_Data_Create_Custom_Char(&water_id, &lcd, water_spr),
+			cleanup
+	);
+	DEFER (
+			LCD_Char_Data_Create_Custom_Char(&grass_id, &lcd, grass_spr),
+			cleanup
+	);
+	DEFER (
+			LCD_Char_Data_Create_Custom_Char(&tree_id, &lcd, tree_spr),
+			cleanup
+	);
+
   GAME_OBJECT player;
+
   // TODO: no checking for errors because there
   // are currently no errors that can be thrown
   // by this function
   GAME_GO_Create(&player.go, 0, 0, &player_sprite_id, 1);
   GAME_Add_Game_Object(&player, &player_update);
+
+  // creating player "object"
+  PLAYER player_po;
+  _PLAYER_Set_Self(&player_po);
+
+  // creating map "object"
+  MAP map;
+  _MAP_Set_Self(&map);
+
+  // terrain
+  map.objs[0] = player;
+  map.game_map[0] = player_sprite_id;
+
+  printf("%zu %zu %zu\n", water_id, grass_id, tree_id);
+
+  for (int i = 1; i < MAP_SIZE; i++) {
+    int r = rand() % TERRAINS;
+
+    size_t* id = NULL;
+    update_fnptr_t fn = NULL;
+
+    switch (r) {
+      case 0:
+        id = &water_id;
+        fn = &water_update;
+        break;
+      case 1:
+        id = &grass_id;
+        fn = &grass_update;
+        break;
+      case 2:
+        id = &tree_id;
+        fn = &tree_update;
+        break;
+    }
+
+    map.game_map[i] = *id;
+
+    GAME_GO_Create(&map.objs[i].go, i % MAP_COLS, ceil(i / MAP_COLS), id, 1);
+    GAME_Add_Game_Object(&map.objs[i], fn);
+  }
 
 	while (game.running) {
 		GAME_Loop_Begin();
