@@ -12,12 +12,23 @@ void player_update(GAME_GO* player_obj) {
 	GAME_OBJECT* left  = NULL;
 	GAME_OBJECT* right = NULL;
 
-	int pos = player.map_position;
+	int pos = player->map_position;
 
+	// TODO: Read player actions 
+	// like: look for trees
+	// or    swim
+	// etc.
+	// and try the best to perform them
+
+
+	// Interact with adjacent cells
 	// y bound down
 	int adj_down = pos + MAP_COLS;
 	if ((pos + MAP_COLS) < MAP_SIZE) {
-		down = map.objs[pos + MAP_COLS]
+		down = &map->objs[adj_down];
+		CELL_ID interacting_id = map->game_map[adj_down];
+
+		interact(&player, down, interacting_id);
 	}
 }
 
