@@ -5,7 +5,10 @@
 #include "../map/map.h"
 
 typedef struct PLAYER {
-  int hp;
+  int map_position;
+	CELL_ID id;
+
+	GAME_OBJECT obj;
 } PLAYER;
 
 extern const LCD_Char player_sprite;
