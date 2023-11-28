@@ -40,27 +40,11 @@ int main(int argc, char** argv) {
 	);	
 
 	size_t player_sprite_id = 0;
-  size_t water_id = 0;
-  size_t grass_id = 0;
-  size_t tree_id  = 0;
 
 	DEFER (
 			LCD_Char_Data_Create_Custom_Char(&player_sprite_id, &lcd, player_sprite),
 			cleanup
-	);
-
-	DEFER (
-			LCD_Char_Data_Create_Custom_Char(&water_id, &lcd, water_spr),
-			cleanup
-	);
-	DEFER (
-			LCD_Char_Data_Create_Custom_Char(&grass_id, &lcd, grass_spr),
-			cleanup
-	);
-	DEFER (
-			LCD_Char_Data_Create_Custom_Char(&tree_id, &lcd, tree_spr),
-			cleanup
-	);
+	);	
 
   GAME_OBJECT player;
 
@@ -78,11 +62,22 @@ int main(int argc, char** argv) {
   MAP map;
   _MAP_Set_Self(&map);
 
+  DEFER (
+			LCD_Char_Data_Create_Custom_Char(&map.terrain.water_id, &lcd, water_spr),
+			cleanup
+	);
+	DEFER (
+			LCD_Char_Data_Create_Custom_Char(&map.terrain.grass_id, &lcd, grass_spr),
+			cleanup
+	);
+	DEFER (
+			LCD_Char_Data_Create_Custom_Char(&map.terrain.tree_id, &lcd, tree_spr),
+			cleanup
+	);
+
   // terrain
   map.objs[0] = player;
   map.game_map[0] = player_sprite_id;
-
-  printf("%zu %zu %zu\n", water_id, grass_id, tree_id);
 
   for (int i = 1; i < MAP_SIZE; i++) {
     int r = rand() % TERRAINS;
@@ -92,15 +87,15 @@ int main(int argc, char** argv) {
 
     switch (r) {
       case 0:
-        id = &water_id;
+        id = &map.terrain.water_id;
         fn = &water_update;
         break;
       case 1:
-        id = &grass_id;
+        id = &map.terrain.grass_id;
         fn = &grass_update;
         break;
       case 2:
-        id = &tree_id;
+        id = &map.terrain.tree_id;
         fn = &tree_update;
         break;
     }

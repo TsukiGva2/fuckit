@@ -9,8 +9,17 @@
 
 #include "../game/game.h"
 
+typedef struct TERRAIN {
+  size_t water_id;
+  size_t grass_id;
+  size_t tree_id;
+} TERRAIN;
+
 typedef struct MAP {
   GAME_OBJECT objs[MAP_SIZE];
+
+  TERRAIN terrain;
+
   size_t game_map[MAP_SIZE];
 } MAP;
 
