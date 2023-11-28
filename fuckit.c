@@ -39,24 +39,25 @@ int main(int argc, char** argv) {
 		cleanup
 	);	
 
-	size_t player_sprite_id = 0;
+  // creating player "object"
+	PLAYER player;
+  _PLAYER_Set_Self(&player);
+
+	player.id        = 0;
+  CELL_ID water_id = 0;
+  CELL_ID grass_id = 0;
+  CELL_ID tree_id  = 0;
 
 	DEFER (
-			LCD_Char_Data_Create_Custom_Char(&player_sprite_id, &lcd, player_sprite),
+			LCD_Char_Data_Create_Custom_Char(&player.id, &lcd, player_sprite),
 			cleanup
 	);	
-
-  GAME_OBJECT player;
 
   // TODO: no checking for errors because there
   // are currently no errors that can be thrown
   // by this function
-  GAME_GO_Create(&player.go, 0, 0, &player_sprite_id, 1);
-  GAME_Add_Game_Object(&player, &player_update);
-
-  // creating player "object"
-  PLAYER player_po;
-  _PLAYER_Set_Self(&player_po);
+  GAME_GO_Create(&player.obj.go, 0, 0, &player.id, 1);
+  GAME_Add_Game_Object(&player.obj, &player_update);
 
   // creating map "object"
   MAP map;
@@ -76,13 +77,18 @@ int main(int argc, char** argv) {
 	);
 
   // terrain
-  map.objs[0] = player;
-  map.game_map[0] = player_sprite_id;
+	map.size        = MAP_SIZE;
+  map.objs[0]     = player.obj;
+  map.game_map[0] = player.id;
 
-  for (int i = 1; i < MAP_SIZE; i++) {
+	player.map_position = 0;
+
+  //printf("%zu %zu %zu\n", water_id, grass_id, tree_id);
+
+  for (int i = 1; i < map.size; i++) {
     int r = rand() % TERRAINS;
 
-    size_t* id = NULL;
+    CELL_ID* id = NULL;
     update_fnptr_t fn = NULL;
 
     switch (r) {

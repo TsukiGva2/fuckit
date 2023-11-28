@@ -9,18 +9,13 @@
 
 #include "../game/game.h"
 
-typedef struct TERRAIN {
-  size_t water_id;
-  size_t grass_id;
-  size_t tree_id;
-} TERRAIN;
+typedef size_t CELL_ID;
 
 typedef struct MAP {
   GAME_OBJECT objs[MAP_SIZE];
+  CELL_ID game_map[MAP_SIZE];
 
-  TERRAIN terrain;
-
-  size_t game_map[MAP_SIZE];
+	size_t size;
 } MAP;
 
 // terrain
