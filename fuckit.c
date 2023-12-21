@@ -25,7 +25,7 @@
 #include "player/player.h"
 #include "map/map.h"
 
-int main(int argc, char** argv) {
+int main() {
 	HAN_Status handler;
 	GAME game;
 	LCD lcd;
@@ -43,10 +43,7 @@ int main(int argc, char** argv) {
 	PLAYER player;
   _PLAYER_Set_Self(&player);
 
-	player.id        = 0;
-  CELL_ID water_id = 0;
-  CELL_ID grass_id = 0;
-  CELL_ID tree_id  = 0;
+	player.id = 0;
 
 	DEFER (
 			LCD_Char_Data_Create_Custom_Char(&player.id, &lcd, player_sprite),
@@ -62,6 +59,10 @@ int main(int argc, char** argv) {
   // creating map "object"
   MAP map;
   _MAP_Set_Self(&map);
+
+  map.terrain.water_id = 0;
+  map.terrain.grass_id = 0;
+  map.terrain.tree_id  = 0;
 
   DEFER (
 			LCD_Char_Data_Create_Custom_Char(&map.terrain.water_id, &lcd, water_spr),
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
 
   //printf("%zu %zu %zu\n", water_id, grass_id, tree_id);
 
-  for (int i = 1; i < map.size; i++) {
+  for (size_t i = 1; i < map.size; i++) {
     int r = rand() % TERRAINS;
 
     CELL_ID* id = NULL;

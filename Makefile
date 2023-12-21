@@ -2,7 +2,7 @@ CFLAGS=`sdl2-config --cflags`
 LIBS=`sdl2-config --libs` -lm
 
 RELEASE=-O2
-DEBUG=-O0 -g -Wall -Wextra
+DEBUG=-O0 -g -Wall -Wextra -Wno-incompatible-pointer-types-discards-qualifiers
 
 all:
 	gcc LCD/LCD.c -c -o LCD.o $(CFLAGS) $(DEBUG)

@@ -1,6 +1,8 @@
 #include "game.h"
 #include "game_internal.h"
 
+#include "../handler/han.h"
+
 static GAME* _GAME_Get_Self(GAME* game) {
 	static GAME* self = NULL;
 
@@ -279,7 +281,7 @@ HAN_Status* GAME_Add_Game_Object(GAME_OBJECT* go,
 	GAME_OBJECT* it = &self->objs_head;
 	size_t i = 0;
 
-	for (it, i; it->next != NULL; it = it->next, i++);
+	for (; it->next != NULL; it = it->next, i++);
 	it->next = go;
 
 	go->prev = it;
@@ -297,7 +299,7 @@ HAN_Status* GAME_Game_Object_Update_All(void) {
 
 	GAME_OBJECT* it = self->objs_head.next;
 
-	for (it; it != NULL; it = it->next) {
+	for (; it != NULL; it = it->next) {
     it->update(&it->go);
 		FAIL (LCD_State_Set_Cursor(self->lcd, it->go.x, it->go.y));
 		FAIL (LCD_Out_Custom_Char(

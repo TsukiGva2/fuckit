@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "../debug/debug.h"
+#include "../fuckit.h"
 
 #define LCD_CHAR_W 5
 #define LCD_CHAR_H 8
@@ -67,11 +68,14 @@ HAN_Status* LCD_Char_Data_Create_Custom_Char(
 																		size_t* id,
 																		LCD* lcd,
 																		uint8_t* data);
+// TODO: dead function lol
+/*
 HAN_Status* LCD_Char_Data_Create_Custom_Chars(
 																		size_t* id,
 																		LCD* lcd,
 																		uint8_t* data,
 																		size_t count);
+*/
 
 HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd);
 

@@ -18,5 +18,7 @@ void player_update(GAME_GO* player);
 PLAYER* _PLAYER_Set_Self(PLAYER* p);
 PLAYER* PLAYER_Get_Self(void);
 
+HAN_Status* interact(PLAYER* p, GAME_OBJECT* obj, CELL_ID cid);
+
 #endif
 

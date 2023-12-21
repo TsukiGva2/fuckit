@@ -1,5 +1,4 @@
 #include "LCD.h"
-#include "../fuckit.h"
 #include "LCD_Font.h"
 
 #include <string.h>
@@ -156,6 +155,9 @@ HAN_Status* LCD_Char_Data_Check_Bounds(LCD* lcd) {
 	return HAN_RETURN_OK;
 }
 
+// TODO: never found use for this one
+// maybe revive this function some day
+/*
 HAN_Status* LCD_Char_Data_Create_Custom_Chars(
 		size_t* id,
 		LCD* lcd,
@@ -175,6 +177,7 @@ HAN_Status* LCD_Char_Data_Create_Custom_Chars(
 
 	return HAN_RETURN_OK;
 }
+*/
 
 HAN_Status* LCD_Char_Data_Create_Custom_Char(
 		size_t* id,
@@ -249,16 +252,16 @@ HAN_Status* LCD_Displayed_Character_Update_Single(LCD_DC* dc) {
 			size_t position =
 				x + (y * dc->surface_data->pitch);
 
+			pixels[position    ] = 0;    // red
 			pixels[position + 1] = 0x7F; // green
+			pixels[position + 2] = 0;    // blue
+                                   
+			pixels[position + 3] = 0xFF; // alpha
 
 			if ((dc->char_wrapped->data[y] &
 					( 1 << (last_bit - (x/4)) )) != 0) {
 				pixels[position + 1] = 0xFF;
 			}
-
-			pixels[position    ] = 0;
-			pixels[position + 2] = 0;
-			pixels[position + 3] = 0xFF; // alpha
 		}
 	}
 

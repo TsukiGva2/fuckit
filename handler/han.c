@@ -2,6 +2,8 @@
 #include "han_defaults.h"
 #include <stdlib.h>
 
+#include <stdio.h>
+
 void HAN_Create(HAN_Status* handler) {
 	handler->code = HAN_OK;
 	handler->message =
@@ -50,5 +52,19 @@ HAN_Status* HAN_Return(
 	}
 
 	return handler;
+}
+
+void my_log(HAN_Status* s, const char* file, int line, const char* func) {
+	printf("in file: %s:%i, function: %s\n"
+"STATUS: %d\n",
+	file, line, func, s->code);
+
+	printf("Description: %s\n\n"
+"Additional details: %s\n",
+	s->message, s->details.details);
+
+	printf("in file: %s:%i, %s\n",
+	s->details.file, s->details.line,
+	s->details.func);
 }
 

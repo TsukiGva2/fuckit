@@ -7,7 +7,6 @@
 
 #include "../fuckit.h"
 #include "../LCD/LCD.h"
-#include "../handler/han.h"
 
 #include "gameobj.h"
 
